@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: faltio-sa
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: faltio-role
+  namespace: default
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/exec", "persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+  - apiGroups: ["serving.kserve.io"]
+    resources: ["inferenceservices","inferenceservices/status"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+  - apiGroups: ["faltio.io"]
+    resources: ["faltiodeployments"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["faltio.io"]
+    resources: ["faltiodeployments/status"]
+    verbs: ["get", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: faltio-rolebinding
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: faltio-sa
+    namespace: default
+roleRef:
+  kind: Role
+  name: faltio-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: faltio-pv-cluster-role
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: faltio-pv-clusterrolebinding
+subjects:
+  - kind: ServiceAccount
+    name: faltio-sa
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: faltio-pv-cluster-role
+  apiGroup: rbac.authorization.k8s.io
+

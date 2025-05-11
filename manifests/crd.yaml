@@ -1,0 +1,66 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: faltiodeployments.faltio.io
+spec:
+  group: faltio.io
+  names:
+    plural: faltiodeployments
+    singular: faltiodeployment
+    kind: FaltioDeployment
+    shortNames:
+      - fd
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                modelName:
+                  type: string
+                modelVersion:
+                  type: string
+                modelFilePath:
+                  type: string
+                deploymentName:
+                  type: string
+                runtime:
+                  type: string
+                storageSize:
+                  type: string
+                serviceAccount:
+                  type: string
+                  default: "faltio-sa"
+                mlflow:
+                  type: object
+                  properties:
+                    host:
+                      type: string
+                    ignoreTls:
+                      type: boolean
+                    secretName:
+                      type: string
+                      description: "Name of the Secret containing mlflow.username and mlflow.password"
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                message:
+                  type: string
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Phase
+          type: string
+          jsonPath: .status.phase
+        - name: Message
+          type: string
+          jsonPath: .status.message
+

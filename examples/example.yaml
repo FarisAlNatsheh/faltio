@@ -1,0 +1,18 @@
+apiVersion: faltio.io/v1alpha1
+kind: FaltioDeployment
+metadata:
+  name: road-objects-detector
+  namespace: default
+spec:
+  modelName: yolo_model_onnx
+  modelVersion: "7"
+  modelFilePath: yolov8m.onnx
+  deploymentName: road-objects-detector
+  runtime: onnx
+  storageSize: 1Gi
+
+  mlflow:
+    host: http://your-mlflow-domain.com
+    ignoreTls: true
+    secretName: mlflow-credentials
+

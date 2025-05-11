@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: faltio-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: faltio-operator
+  namespace: faltio-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: faltio-operator
+  template:
+    metadata:
+      labels:
+        app: faltio-operator
+    spec:
+      serviceAccountName: faltio-operator
+      containers:
+        - name: operator
+          image: farisalnatsheh/faltio-operator:latest
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

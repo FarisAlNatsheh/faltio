@@ -1,0 +1,6 @@
+apiVersion: org.acme/v1
+kind: GettingStartedCustomResource
+metadata:
+  name: test1
+spec:
+  value: test

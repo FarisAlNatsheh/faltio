@@ -1,0 +1,38 @@
+FROM maven:3.9.9-eclipse-temurin-21 AS builder
+COPY src /home/app/src
+COPY pom.xml /home/app
+RUN mvn -f /home/app/pom.xml package -DskipTests
+WORKDIR /home/app/target
+
+
+FROM eclipse-temurin:21-jre-jammy AS final
+
+# Install minimal Python and MLflow CLI
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends python3-minimal python3-pip && \
+    ln -s /usr/bin/python3 /usr/bin/python && \
+    pip install --no-cache-dir --no-deps mlflow==2.21.3 && \
+    pip install --no-cache-dir \
+        click \
+        pyyaml \
+        requests \
+        protobuf \
+        packaging \
+        pydantic \
+        opentelemetry-api \
+        opentelemetry-sdk \
+        databricks \
+        databricks.sdk \
+        sqlparse && \
+    apt-get purge -y --auto-remove && \
+    rm -rf /var/lib/apt/lists/* /root/.cache
+
+
+COPY --from=builder /home/app/target/kube-ml-0.0.1-SNAPSHOT.jar /app/app.jar
+
+RUN useradd -u 1001 appuser
+USER appuser
+WORKDIR /app
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
