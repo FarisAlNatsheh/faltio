@@ -1,3 +1,3 @@
-# Generated Project Skeleton
+# Faltio Operator 
 
-A simple operator that copies the value in a spec to a ConfigMap. 
+Operator that is responsible for deploying FaltioDeployment objects
