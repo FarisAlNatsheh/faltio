@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/faltio-logo.svg" alt="Faltio Logo" height="120"/>
+  <img src="assets/faltio-logo-cropped.svg" alt="Faltio Logo" height="120"/>
 </p>
 
 <h1 align="center">Faltio Operator</h1>
