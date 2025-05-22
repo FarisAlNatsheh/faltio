@@ -1,0 +1,24 @@
+namespace: faltio-system
+
+image:
+  repository: farisalnatsheh/faltio-operator
+  tag: latest
+  pullPolicy: Always
+
+resources:
+  requests:
+    memory: 256Mi
+    cpu: 100m
+  limits:
+    memory: 512Mi
+    cpu: 500m
+
+serviceAccount:
+  name: faltio-operator
+
+crd:
+  enabled: true
+
+faltioServiceAccount:
+  name: faltio-sa
+  namespace: default

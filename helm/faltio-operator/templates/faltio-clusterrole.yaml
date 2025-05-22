@@ -1,0 +1,21 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: faltio-pv-cluster-role
+rules:
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: faltio-pv-clusterrolebinding
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.faltioServiceAccount.name }}
+    namespace: {{ .Values.faltioServiceAccount.namespace }}
+roleRef:
+  kind: ClusterRole
+  name: faltio-pv-cluster-role
+  apiGroup: rbac.authorization.k8s.io
