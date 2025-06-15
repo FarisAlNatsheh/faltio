@@ -16,7 +16,7 @@
 
 ## What is Faltio?
 
-**Faltio** is a Kubernetes-native tool that simplifies deploying machine learning models using:
+**Faltio** (pronounced *fal-tee-oh*) is a Kubernetes-native tool that simplifies deploying machine learning models using:
 - **KServe** for serving models
 - **MLflow** as a model registry
 - A clean **CRD interface** for declarative deployments of Machine Learning models.
