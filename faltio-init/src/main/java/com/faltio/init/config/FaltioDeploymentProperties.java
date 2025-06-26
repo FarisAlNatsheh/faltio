@@ -14,4 +14,7 @@ public class FaltioDeploymentProperties {
     private String modelVersion;
     private String modelFilePath;
     private String deploymentName;
+    private String storageClass;
+    private boolean defaultStorageClass;
+    private boolean createLocalPv;
 }

@@ -21,7 +21,7 @@ RUN apk add --no-cache python3 py3-pip && \
         sqlparse && \
     rm -rf /root/.cache
 
-COPY --from=builder /home/app/target/kube-ml-0.0.1-SNAPSHOT.jar /app/app.jar
+COPY --from=builder /home/app/target/faltio-init-0.0.1-SNAPSHOT.jar /app/app.jar
 
 RUN adduser -D -u 1001 appuser
 USER appuser

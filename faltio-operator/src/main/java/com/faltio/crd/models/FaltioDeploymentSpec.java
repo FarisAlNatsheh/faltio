@@ -12,5 +12,7 @@ public class FaltioDeploymentSpec {
     private String storageSize;
     private String serviceAccount;
     private MlflowConfig mlflow;
+    private String storageClass;
+    private boolean testMode;
 }
 

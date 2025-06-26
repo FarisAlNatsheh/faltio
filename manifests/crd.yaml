@@ -37,6 +37,10 @@ spec:
                 serviceAccount:
                   type: string
                   default: "faltio-sa"
+                storageClass:
+                  type: string
+                testMode:
+                  type: boolean                  
                 mlflow:
                   type: object
                   properties:

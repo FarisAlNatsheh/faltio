@@ -58,7 +58,7 @@ public class KubernetesService {
                 ),
                 "spec", Map.of(
                         "predictor", Map.of(
-                                "serviceAccountName", "sa",
+                                "serviceAccountName", "faltio-sa",
                                 "model", Map.of(
                                         "protocolVersion", "v2",
                                         "modelFormat", Map.of("name", "onnx"),
@@ -99,10 +99,10 @@ public class KubernetesService {
     }
 
 
-    public void copyFileToPVC(String deploymentName, String modelName, String modelFilePath, String modelVersion, String uuid) throws Exception {
+    public void copyFileToPVC(String deploymentName, String modelName, String modelFilePath, String modelVersion, String storageClass, boolean defaultStorageClass, boolean createLocalPv, String uuid) throws Exception {
         String pvcName = "model-"+uuid;
         String pvName = pvcName + "-pv";
-        createPVandPVC(deploymentName,uuid,pvName, pvcName);
+        createPVandPVC(deploymentName,uuid,pvName, pvcName, storageClass, defaultStorageClass, createLocalPv);
 
         String podName = "file-copy-pod-"+uuid;
         File file = mlflowService.getArtifact(modelName, modelFilePath, modelVersion);
@@ -127,41 +127,51 @@ public class KubernetesService {
 
 
 
-    private void createPVandPVC(String serviceName, String uuid, String pvName, String pvcName) throws ApiException {
-        try {
-            api.readPersistentVolume(pvName).execute();
-            log.warn("PV already exists: {}", pvName);
-        }
-        catch (ApiException e){
-            if(e.getCode() == 404){
-                V1PersistentVolume pv = new V1PersistentVolume()
-                        .metadata(new V1ObjectMeta().name(pvName).labels(
-                                Map.of(
-                                        "app.kubernetes.io/managed-by", "faltio",
-                                        "app.kubernetes.io/part-of", serviceName,
-                                        "app.kubernetes.io/component", "model-storage-backend",
-                                        "app.kubernetes.io/instance", uuid,
-                                        "faltio.deployment-id", uuid
+    private void createPVandPVC(String serviceName, String uuid, String pvName, String pvcName, String storageClass, boolean defaultClass, boolean createLocalPv) throws ApiException {
+        if(createLocalPv) {
+            try {
+                api.readPersistentVolume(pvName).execute();
+                log.warn("PV already exists: {}", pvName);
+            } catch (ApiException e) {
+                if (e.getCode() == 404) {
+                    V1PersistentVolume pv = new V1PersistentVolume()
+                            .metadata(new V1ObjectMeta().name(pvName).labels(
+                                            Map.of(
+                                                    "app.kubernetes.io/managed-by", "faltio",
+                                                    "app.kubernetes.io/part-of", serviceName,
+                                                    "app.kubernetes.io/component", "model-storage-backend",
+                                                    "app.kubernetes.io/instance", uuid,
+                                                    "faltio.deployment-id", uuid
+                                            )
                                     )
-                                )
-                        )
-                        .spec(new V1PersistentVolumeSpec()
-                                .addAccessModesItem("ReadWriteOnce")
-                                .capacity(Collections.singletonMap("storage", Quantity.fromString("1Gi")))
-                                .persistentVolumeReclaimPolicy("Retain")
-                                .hostPath(new V1HostPathVolumeSource().path("/tmp/" + pvName))
-                        );
-                api.createPersistentVolume(pv).execute();
-                log.info("PV {} Created", pvName);
+                            )
+                            .spec(new V1PersistentVolumeSpec()
+                                    .addAccessModesItem("ReadWriteOnce")
+                                    .capacity(Collections.singletonMap("storage", Quantity.fromString("1Gi")))
+                                    .persistentVolumeReclaimPolicy("Retain")
+                                    .hostPath(new V1HostPathVolumeSource().path("/tmp/" + pvName))
+                            );
+                    api.createPersistentVolume(pv).execute();
+                    log.info("PV {} Created", pvName);
+                }
             }
         }
-
 
         try {
             api.readNamespacedPersistentVolumeClaim(pvcName, namespace).execute();
             log.warn("PVC already exists: {}", pvcName);
         }
         catch (ApiException e){
+            V1PersistentVolumeClaimSpec spec = new V1PersistentVolumeClaimSpec()
+                    .accessModes(Collections.singletonList("ReadWriteOnce"))
+                    .resources(new V1VolumeResourceRequirements()
+                                .requests(Collections.singletonMap("storage", Quantity.fromString("1Gi"))))
+                                .volumeName(pvName);
+
+            if(!defaultClass)
+                spec = spec.storageClassName(storageClass);
+
+
             if(e.getCode() == 404){
                 V1PersistentVolumeClaim pvc = new V1PersistentVolumeClaim()
                         .metadata(new V1ObjectMeta().name(pvcName).namespace(namespace).labels(
@@ -173,12 +183,7 @@ public class KubernetesService {
                                         "faltio.deployment-id", uuid
                                 )
                         ))
-                        .spec(new V1PersistentVolumeClaimSpec()
-                                .accessModes(Collections.singletonList("ReadWriteOnce"))
-                                .resources(new V1VolumeResourceRequirements()
-                                        .requests(Collections.singletonMap("storage", Quantity.fromString("1Gi"))))
-                                .volumeName(pvName)
-                        );
+                        .spec(spec);
                 api.createNamespacedPersistentVolumeClaim(namespace, pvc).execute();
                 log.info("PVC {} Created", pvcName);
             }

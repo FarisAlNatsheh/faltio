@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,7 +23,7 @@ public class KubernetesService {
     private final KubernetesClient client;
     private static final Logger log = LoggerFactory.getLogger(KubernetesService.class);
     private String decode(String base64Value) {
-        return new String(java.util.Base64.getDecoder().decode(base64Value));
+        return new String(Base64.getDecoder().decode(base64Value));
     }
     public Job getInitJob(String namespace, String jobName) {
         return client.batch()
@@ -32,8 +33,6 @@ public class KubernetesService {
                 .withName(jobName)
                 .get();
     }
-
-
     public Job createInitJob(String namespace, String jobName, FaltioDeployment resource) {
         FaltioDeploymentSpec spec = resource.getSpec();
         String serviceAccount = spec.getServiceAccount() != null ? spec.getServiceAccount() : "faltio-sa";
@@ -50,6 +49,39 @@ public class KubernetesService {
         String username = decode(secret.getData().get("username"));
         String password = decode(secret.getData().get("password"));
 
+        boolean useDefaultClass = true;
+        boolean createLocalPv = false;
+
+
+        String storageClassName = spec.getStorageClass();
+
+        if(spec.getStorageClass() == null)
+            storageClassName = "";
+        else
+            useDefaultClass = false;
+
+
+        if(spec.isTestMode()) {
+            useDefaultClass = false;
+            createLocalPv = true;
+            storageClassName = "";
+        }
+
+        String[] args ={
+                "--spring.application.name=kube-ml",
+                "--mlflow.host=" + spec.getMlflow().getHost(),
+                "--mlflow.username=" + username,
+                "--mlflow.password=" + password,
+                "--mlflow.ignore-tls=" + spec.getMlflow().getIgnoreTls(),
+                "--kubernetes.namespace=" + namespace,
+                "--faltio.model-name=" + spec.getModelName(),
+                "--faltio.model-version=" + spec.getModelVersion(),
+                "--faltio.model-file-path=" + spec.getModelFilePath(),
+                "--faltio.deployment-name=" + spec.getDeploymentName(),
+                "--faltio.storage-class=" + storageClassName,
+                "--faltio.default-storage-class=" + useDefaultClass,
+                "--faltio.create-local-pv="+ createLocalPv
+        };
 
         Job job = new JobBuilder()
                 .withNewMetadata()
@@ -73,17 +105,9 @@ public class KubernetesService {
                 .withImage("docker.io/farisalnatsheh/faltio-deployment-init")
                 .withImagePullPolicy("Always")
                 .withArgs(
-                        "--spring.application.name=kube-ml",
-                        "--mlflow.host=" + spec.getMlflow().getHost(),
-                        "--mlflow.username=" + username,
-                        "--mlflow.password=" + password,
-                        "--mlflow.ignore-tls=" + spec.getMlflow().getIgnoreTls(),
-                        "--kubernetes.namespace=" + namespace,
-                        "--faltio.model-name=" + spec.getModelName(),
-                        "--faltio.model-version=" + spec.getModelVersion(),
-                        "--faltio.model-file-path=" + spec.getModelFilePath(),
-                        "--faltio.deployment-name=" + spec.getDeploymentName()
+                    args
                 )
+
                 .endContainer()
                 .endSpec()
                 .endTemplate()

@@ -40,6 +40,9 @@ spec:
   runtime: onnx
   storageSize: 1Gi
   serviceAccount: faltio-sa
+  #storageClass: test
+  testMode: true ## Creates a local PV for testing purposes, overrides storage class to an empty string
+
   mlflow:
     host: http://mlflow.example.com
     ignoreTls: true
@@ -48,4 +51,6 @@ spec:
 
 ## 🧪 Intended Use
 
-This project was built as a **developer convenience tool** for internal use, experimentation, and iterative testing. Faltio is **NOT** a production-ready tool.
+This project was built as a **developer convenience tool** for internal use, experimentation, and iterative testing. Faltio is **NOT** a production-ready tool yet.
+
+This tool currently only deploys ONNX models.

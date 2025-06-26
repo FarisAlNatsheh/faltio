@@ -26,6 +26,9 @@ public class StartupRunner implements CommandLineRunner {
                     props.getModelName(),
                     props.getModelFilePath(),
                     props.getModelVersion(),
+                    props.getStorageClass(),
+                    props.isDefaultStorageClass(),
+                    props.isCreateLocalPv(),
                     uuid
             );
         } catch (Exception e) {
